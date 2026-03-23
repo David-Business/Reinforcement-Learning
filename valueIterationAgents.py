@@ -53,6 +53,7 @@ class ValueIterationAgent(ValueEstimationAgent):
               mdp.getReward(state, action, nextState)
               mdp.isTerminal(state)
         """
+        
         self.mdp = mdp
         self.discount = discount
         self.iterations = iterations
@@ -66,6 +67,23 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
 
+        old = self.values.copy()
+        storage = []
+        for i in range(self.iterations):
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state):
+                    old[state] = 0
+                else:
+                    storage.clear()
+                    for action in self.mdp.getPossibleActions(state):
+                        storage.append(self.computeQValueFromValues(state, action))
+                    temp = max(storage)
+                    old[state] = temp
+            self.values = old
+        return self.values        
+
+
+
     def getValue(self, state):
         """
           Return the value of the state (computed in __init__).
@@ -78,7 +96,12 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        q = 0
+        for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            q = q + prob * (self.mdp.getReward(state, action, nextState) + self.discount * self.getValue(nextState))
+        return q
+
 
     def computeActionFromValues(self, state):
         """
@@ -90,7 +113,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for action in self.mdp.getPossibleActions(state):
+            storage = []
+            if self.mdp.isTerminal(state):
+                return None
+            else:
+                storage.append(self.computeQValueFromValues(state, action))
+                temp = max(storage)
+                return temp
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
